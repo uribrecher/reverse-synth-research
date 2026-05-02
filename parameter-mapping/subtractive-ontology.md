@@ -12,6 +12,48 @@ Companion to [`subtractive.schema.json`](./subtractive.schema.json). Explains th
 4. **Common-core only.** A canonical param exists only if it can be sensibly mapped to most of the surveyed devices. Anything that requires deep per-device interpretation lives in the backlog, not the schema. See "What is not here" below.
 5. **`x-unit` annotation.** A custom JSON Schema keyword (validators ignore unknown keywords) carries the physical unit. Future codegen will use this to emit Pydantic / TypeScript types with the right unit semantics. The keyword is not load-bearing for v0.1 validation.
 
+## Canonical params and their units
+
+The schema's `x-unit` annotations summarize each param's physical unit. Names that already encode the unit (`cutoff_hz`, `attack_ms`, `volume_db`, `detune_cents`, `pulse_width_pct`) carry it explicitly; names without a unit suffix (`level`, `resonance`, `sustain`, `depth`, `key_tracking`, `drive`, `envelope_amount`) are unitless 0–1 ratios (signed where noted).
+
+| Param | Unit | Range | Notes |
+|---|---|---|---|
+| `osc.{1,2}.shape` | enum | `sine` / `saw` / `square` / `triangle` / `pulse` | |
+| `osc.{1,2}.level` | ratio | 0 – 1 | mixer level into engine; 0 = muted |
+| `osc.{1,2}.detune_cents` | cents | −1200 – 1200 | fine pitch offset; 1200 cents = 1 octave |
+| `osc.{1,2}.octave` | octaves (integer) | −3 – 3 | coarse pitch offset, NOT semitones |
+| `osc.{1,2}.pulse_width_pct` | percent | 0 – 100 | only when `shape == 'pulse'`; 50 = perfect square, extremes = narrow pulse |
+| `osc.sub.octave` | octaves (integer) | enum: −2 or −1 | sub-osc octave below parent osc |
+| `osc.sub.level` | ratio | 0 – 1 | |
+| `noise.color` | enum | `white` / `pink` | spectral tilt; pink rolls off 3 dB/octave |
+| `noise.level` | ratio | 0 – 1 | |
+| `filter.lp.cutoff_hz` | Hz | 20 – 20000 | low-pass cutoff, log-distributed in practice |
+| `filter.lp.resonance` | ratio | 0 – 1 | Q / emphasis; 1 ≈ self-oscillation territory |
+| `filter.lp.envelope_amount` | signed ratio | −1 – 1 | filter-envelope depth into cutoff; negative inverts the envelope |
+| `filter.lp.key_tracking` | ratio | 0 – 1 | how much note pitch tracks cutoff (0 = none, 1 = full key follow) |
+| `filter.lp.drive` | ratio | 0 – 1 | pre-filter saturation amount |
+| `envelope.{amp,filter}.attack_ms` | ms | 0 – 10000 | |
+| `envelope.{amp,filter}.decay_ms` | ms | 0 – 20000 | |
+| `envelope.{amp,filter}.sustain` | ratio | 0 – 1 | sustain level as **fraction of peak**, NOT dB |
+| `envelope.{amp,filter}.release_ms` | ms | 0 – 20000 | |
+| `lfo.1.rate_hz` | Hz | 0.01 – 100 | LFO frequency, log-distributed in practice (sub-audio range) |
+| `lfo.1.shape` | enum | `sine` / `triangle` / `square` / `saw` / `ramp` / `sample_hold` | |
+| `lfo.1.depth` | ratio | 0 – 1 | global modulation depth |
+| `lfo.1.target` | enum | (see destination vocabulary below) | seven-value enum |
+| `voice.mode` | enum | `mono` / `poly` / `unison` | |
+| `voice.glide_ms` | ms | 0 – 5000 | portamento time |
+| `voice.unison_voices` | integer count | 1 – 16 | active voices in unison; ignored if `mode != 'unison'` |
+| `master.volume_db` | dB | −60 – 6 | referenced to the device's nominal full-scale output (0 dB = unity, +6 dB = mild boost, −60 dB ≈ silent) |
+
+Conventions:
+
+- **`ratio`** is a unitless 0–1 normalized scale (or signed −1 to 1 where noted). The schema deliberately rejects 0–127 MIDI scaling for canonical params — that's a device-side concern.
+- **`cents`** = 1/100 of a semitone; 1200 cents = 1 octave. Use `detune_cents` for fine pitch and `octave` (integer) for coarse pitch — they are independent.
+- **`Hz`** is used for both filter cutoff (audio range) and LFO rate (sub-audio range); the range bounds disambiguate.
+- **`ms`** time params have wide ranges (up to 10–20 s) to accommodate long pad envelopes.
+- **`dB`** for `volume_db` is referenced to nominal full-scale output of the device, not absolute SPL.
+- The `x-unit` JSON Schema keyword in `subtractive.schema.json` is the machine-readable source of truth; this table mirrors it for human readers.
+
 ## Common-core LFO destination vocabulary
 
 The `ModulationDestination` enum in the schema is exactly seven values:

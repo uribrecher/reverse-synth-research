@@ -82,43 +82,45 @@ This survey informs a "common-core" canonical ontology — see the MVP spec for 
 
 Each canonical param vs. the eight surveyed devices. ✓ = direct support, ≈ = near-equivalent (concept present but in different units, constrained range, single-source-of-many, or NRPN/SysEx-only addressability), ✗ = absent. Count column is total ✓+≈. Per the MVP spec's definition of done, every canonical param must hit ≥3 devices. The sweep applies the rule: ≥3 keeps the param, 2 demotes to optional, 0–1 removes. **All canonical params survive the sweep — no demotions, no removals.**
 
-| Canonical param | Prophet-6 | JUNO-X | Prophet-5 | OB-X8 | Muse | PolyBrute 12 | Minilogue XD | Summit | Count |
-|---|---|---|---|---|---|---|---|---|---|
-| osc.1.shape | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
-| osc.1.level | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
-| osc.1.detune_cents | ✗ | ≈ | ✗ | ✗ | ≈ | ≈ | ✓ | ✓ | 5 |
-| osc.1.octave | ≈ | ≈ | ≈ | ≈ | ✓ | ≈ | ✓ | ✓ | 8 |
-| osc.1.pulse_width_pct | ✓ | ≈ | ✓ | ✓ | ✓ | ✓ | ≈ | ≈ | 8 |
-| osc.2.shape | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 7 |
-| osc.2.level | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 7 |
-| osc.2.detune_cents | ✓ | ✗ | ✓ | ✓ | ≈ | ≈ | ✓ | ✓ | 7 |
-| osc.2.octave | ≈ | ✗ | ≈ | ≈ | ✓ | ≈ | ✓ | ✓ | 7 |
-| osc.2.pulse_width_pct | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ≈ | ≈ | 7 |
-| osc.sub.octave | ≈ | ≈ | ✗ | ✗ | ✗ | ≈ | ✗ | ✗ | 3 |
-| osc.sub.level | ✓ | ✓ | ✗ | ✗ | ✗ | ✓ | ✗ | ✗ | 3 |
-| noise.color | ≈ | ≈ | ≈ | ≈ | ≈ | ≈ | ✗ | ≈ | 7 |
-| noise.level | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | 7 |
-| filter.lp.cutoff_hz | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
-| filter.lp.resonance | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
-| filter.lp.envelope_amount | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
-| filter.lp.key_tracking | ✓ | ✓ | ≈ | ✓ | ≈ | ✓ | ≈ | ✓ | 8 |
-| filter.lp.drive | ≈ | ✗ | ✗ | ✗ | ✓ | ✓ | ✓ | ✓ | 5 |
-| envelope.amp.attack_ms | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
-| envelope.amp.decay_ms | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
-| envelope.amp.sustain | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
-| envelope.amp.release_ms | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
-| envelope.filter.attack_ms | ✓ | ≈ | ✓ | ✓ | ✓ | ✓ | ≈ | ≈ | 8 |
-| envelope.filter.decay_ms | ✓ | ≈ | ✓ | ✓ | ✓ | ✓ | ≈ | ≈ | 8 |
-| envelope.filter.sustain | ✓ | ≈ | ✓ | ✓ | ✓ | ✓ | ✗ | ≈ | 7 |
-| envelope.filter.release_ms | ✓ | ≈ | ✓ | ✓ | ✓ | ✓ | ✗ | ≈ | 7 |
-| lfo.1.rate_hz | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
-| lfo.1.shape | ✓ | ✓ | ≈ | ✓ | ✓ | ≈ | ✓ | ≈ | 8 |
-| lfo.1.depth | ✓ | ≈ | ✓ | ≈ | ✓ | ≈ | ✓ | ≈ | 8 |
-| lfo.1.target | ✓ | ✓ | ✓ | ✓ | ≈ | ≈ | ✓ | ✓ | 8 |
-| voice.mode | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ≈ | ✓ | 8 |
-| voice.glide_ms | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
-| voice.unison_voices | ✓ | ≈ | ✓ | ✓ | ≈ | ≈ | ≈ | ≈ | 8 |
-| master.volume_db | ≈ | ≈ | ≈ | ≈ | ≈ | ✗ | ✗ | ≈ | 6 |
+| Canonical param | Unit | Prophet-6 | JUNO-X | Prophet-5 | OB-X8 | Muse | PolyBrute 12 | Minilogue XD | Summit | Count |
+|---|---|---|---|---|---|---|---|---|---|---|
+| osc.1.shape | enum | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| osc.1.level | ratio (0–1) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| osc.1.detune_cents | cents | ✗ | ≈ | ✗ | ✗ | ≈ | ≈ | ✓ | ✓ | 5 |
+| osc.1.octave | octaves (int) | ≈ | ≈ | ≈ | ≈ | ✓ | ≈ | ✓ | ✓ | 8 |
+| osc.1.pulse_width_pct | % | ✓ | ≈ | ✓ | ✓ | ✓ | ✓ | ≈ | ≈ | 8 |
+| osc.2.shape | enum | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 7 |
+| osc.2.level | ratio (0–1) | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 7 |
+| osc.2.detune_cents | cents | ✓ | ✗ | ✓ | ✓ | ≈ | ≈ | ✓ | ✓ | 7 |
+| osc.2.octave | octaves (int) | ≈ | ✗ | ≈ | ≈ | ✓ | ≈ | ✓ | ✓ | 7 |
+| osc.2.pulse_width_pct | % | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ≈ | ≈ | 7 |
+| osc.sub.octave | octaves (int) | ≈ | ≈ | ✗ | ✗ | ✗ | ≈ | ✗ | ✗ | 3 |
+| osc.sub.level | ratio (0–1) | ✓ | ✓ | ✗ | ✗ | ✗ | ✓ | ✗ | ✗ | 3 |
+| noise.color | enum | ≈ | ≈ | ≈ | ≈ | ≈ | ≈ | ✗ | ≈ | 7 |
+| noise.level | ratio (0–1) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | 7 |
+| filter.lp.cutoff_hz | Hz | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| filter.lp.resonance | ratio (0–1) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| filter.lp.envelope_amount | ratio (−1 to 1) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| filter.lp.key_tracking | ratio (0–1) | ✓ | ✓ | ≈ | ✓ | ≈ | ✓ | ≈ | ✓ | 8 |
+| filter.lp.drive | ratio (0–1) | ≈ | ✗ | ✗ | ✗ | ✓ | ✓ | ✓ | ✓ | 5 |
+| envelope.amp.attack_ms | ms | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| envelope.amp.decay_ms | ms | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| envelope.amp.sustain | ratio (0–1) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| envelope.amp.release_ms | ms | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| envelope.filter.attack_ms | ms | ✓ | ≈ | ✓ | ✓ | ✓ | ✓ | ≈ | ≈ | 8 |
+| envelope.filter.decay_ms | ms | ✓ | ≈ | ✓ | ✓ | ✓ | ✓ | ≈ | ≈ | 8 |
+| envelope.filter.sustain | ratio (0–1) | ✓ | ≈ | ✓ | ✓ | ✓ | ✓ | ✗ | ≈ | 7 |
+| envelope.filter.release_ms | ms | ✓ | ≈ | ✓ | ✓ | ✓ | ✓ | ✗ | ≈ | 7 |
+| lfo.1.rate_hz | Hz | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| lfo.1.shape | enum | ✓ | ✓ | ≈ | ✓ | ✓ | ≈ | ✓ | ≈ | 8 |
+| lfo.1.depth | ratio (0–1) | ✓ | ≈ | ✓ | ≈ | ✓ | ≈ | ✓ | ≈ | 8 |
+| lfo.1.target | enum | ✓ | ✓ | ✓ | ✓ | ≈ | ≈ | ✓ | ✓ | 8 |
+| voice.mode | enum | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ≈ | ✓ | 8 |
+| voice.glide_ms | ms | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| voice.unison_voices | int (1–16) | ✓ | ≈ | ✓ | ✓ | ≈ | ≈ | ≈ | ≈ | 8 |
+| master.volume_db | dB | ≈ | ≈ | ≈ | ≈ | ≈ | ✗ | ✗ | ≈ | 6 |
+
+Unit column reflects the schema's `x-unit` annotation (in `../subtractive.schema.json`). `ratio (0–1)` means a unitless normalized scale; `ratio (−1 to 1)` is signed; `cents` = 1/100 semitone; `octaves (int)` is an integer octave count; `enum` means a string-valued discrete vocabulary (the schema's `enum` field has the allowed values). See `../subtractive-ontology.md` for the per-param ranges and acoustic meanings.
 
 ### Notable ≈ judgement calls
 
