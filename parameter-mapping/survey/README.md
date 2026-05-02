@@ -77,3 +77,69 @@ Each per-device survey doc follows this template:
 ## Common-core boundary
 
 This survey informs a "common-core" canonical ontology — see the MVP spec for the rule. Features supported by some surveyed devices but excluded from common-core (cross-mod, sync, ring mod, dual filters, multi-mode filter morphing, full mod-matrix slots, vintage knob simulation) are still recorded in survey docs under quirks/routing — they just do not get canonical params in `../subtractive.schema.json`. They are catalogued in `../../docs/superpowers/specs/2026-05-02-subtractive-ontology-backlog.md`.
+
+## Coverage matrix (cross-check sweep)
+
+Each canonical param vs. the eight surveyed devices. ✓ = direct support, ≈ = near-equivalent (concept present but in different units, constrained range, single-source-of-many, or NRPN/SysEx-only addressability), ✗ = absent. Count column is total ✓+≈. Per the MVP spec's definition of done, every canonical param must hit ≥3 devices. The sweep applies the rule: ≥3 keeps the param, 2 demotes to optional, 0–1 removes. **All canonical params survive the sweep — no demotions, no removals.**
+
+| Canonical param | Prophet-6 | JUNO-X | Prophet-5 | OB-X8 | Muse | PolyBrute 12 | Minilogue XD | Summit | Count |
+|---|---|---|---|---|---|---|---|---|---|
+| osc.1.shape | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| osc.1.level | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| osc.1.detune_cents | ✗ | ≈ | ✗ | ✗ | ≈ | ≈ | ✓ | ✓ | 5 |
+| osc.1.octave | ≈ | ≈ | ≈ | ≈ | ✓ | ≈ | ✓ | ✓ | 8 |
+| osc.1.pulse_width_pct | ✓ | ≈ | ✓ | ✓ | ✓ | ✓ | ≈ | ≈ | 8 |
+| osc.2.shape | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 7 |
+| osc.2.level | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 7 |
+| osc.2.detune_cents | ✓ | ✗ | ✓ | ✓ | ≈ | ≈ | ✓ | ✓ | 7 |
+| osc.2.octave | ≈ | ✗ | ≈ | ≈ | ✓ | ≈ | ✓ | ✓ | 7 |
+| osc.2.pulse_width_pct | ✓ | ✗ | ✓ | ✓ | ✓ | ✓ | ≈ | ≈ | 7 |
+| osc.sub.octave | ≈ | ≈ | ✗ | ✗ | ✗ | ≈ | ✗ | ✗ | 3 |
+| osc.sub.level | ✓ | ✓ | ✗ | ✗ | ✗ | ✓ | ✗ | ✗ | 3 |
+| noise.color | ≈ | ≈ | ≈ | ≈ | ≈ | ≈ | ✗ | ≈ | 7 |
+| noise.level | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✗ | ✓ | 7 |
+| filter.lp.cutoff_hz | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| filter.lp.resonance | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| filter.lp.envelope_amount | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| filter.lp.key_tracking | ✓ | ✓ | ≈ | ✓ | ≈ | ✓ | ≈ | ✓ | 8 |
+| filter.lp.drive | ≈ | ✗ | ✗ | ✗ | ✓ | ✓ | ✓ | ✓ | 5 |
+| envelope.amp.attack_ms | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| envelope.amp.decay_ms | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| envelope.amp.sustain | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| envelope.amp.release_ms | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| envelope.filter.attack_ms | ✓ | ≈ | ✓ | ✓ | ✓ | ✓ | ≈ | ≈ | 8 |
+| envelope.filter.decay_ms | ✓ | ≈ | ✓ | ✓ | ✓ | ✓ | ≈ | ≈ | 8 |
+| envelope.filter.sustain | ✓ | ≈ | ✓ | ✓ | ✓ | ✓ | ✗ | ≈ | 7 |
+| envelope.filter.release_ms | ✓ | ≈ | ✓ | ✓ | ✓ | ✓ | ✗ | ≈ | 7 |
+| lfo.1.rate_hz | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| lfo.1.shape | ✓ | ✓ | ≈ | ✓ | ✓ | ≈ | ✓ | ≈ | 8 |
+| lfo.1.depth | ✓ | ≈ | ✓ | ≈ | ✓ | ≈ | ✓ | ≈ | 8 |
+| lfo.1.target | ✓ | ✓ | ✓ | ✓ | ≈ | ≈ | ✓ | ✓ | 8 |
+| voice.mode | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ≈ | ✓ | 8 |
+| voice.glide_ms | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | 8 |
+| voice.unison_voices | ✓ | ≈ | ✓ | ✓ | ≈ | ≈ | ≈ | ≈ | 8 |
+| master.volume_db | ≈ | ≈ | ≈ | ≈ | ≈ | ✗ | ✗ | ≈ | 6 |
+
+### Notable ≈ judgement calls
+
+- **Pitch-fine vs semitones vs cents.** Several devices expose pitch tuning as semitones (P6 `Osc 1 Freq`, JUNO-X `OSC PITCH`, P5 `Osc A Freq`, OB-X8 `OSC 1/2 FREQ`, PB12 `VCO Tune`) rather than cents. Counted as ≈ for `detune_cents` per the rule that "cents vs semitones" near-equivalents count as ✓.
+- **Octave switches vs continuous semitone ranges.** `osc.*.octave` is canonically an integer octave count. Devices with continuous semitone-stepped frequency knobs spanning multiple octaves (P6, JUNO-X, P5, OB-X8, PB12) are scored ≈; devices with explicit foot-switch octave selectors (Muse, Mlg-XD, Summit) are ✓.
+- **Pulse width on shape-morph oscillators.** Mlg-XD `VCO SHAPE` and Summit `Osc N Shape` are continuously-variable waveshape morphs; on a pulse waveform the SHAPE knob acts as duty-cycle. Counted as ≈ for `pulse_width_pct`. JUNO-X has `PULSE WIDTH MOD/SSAW DETUNE` SysEx-only — also ≈.
+- **Sub-osc octave constrained to -1.** Schema permits {-2, -1}; P6 / JUNO-X / PB12 sub-oscs are fixed one octave below the parent, equivalent to -1 only. Concept and value-within-allowed-range present, so ≈.
+- **Noise color.** Schema enum is `["white", "pink"]`. Most devices ship white noise only with no color selector — counted as ≈ (color "fixed" to white). PB12 has a continuous `Noise Color` knob (rumble→white) which is also ≈ since it's not a discrete enum. Mlg-XD has no analog noise (digital MULTI ENGINE only) — ✗.
+- **JUNO-X shared ADSR.** AnalogSynth has a single shared ADSR that drives both VCA and (scaled by FLT ENV DEPTH) the LPF cutoff. Filter-envelope rows are scored ≈ on JUNO-X because the same envelope plays both roles via a depth knob.
+- **Mlg-XD `EG` is AD-only, not ADSR.** Shared 2-stage AD envelope time-shared between filter and pitch via `EG TARGET`. `envelope.filter.attack_ms` and `envelope.filter.decay_ms` are ≈ (AD present); `envelope.filter.sustain` and `envelope.filter.release_ms` are ✗ (no S/R stages on this envelope).
+- **Summit Mod Env 1 as filter envelope.** No dedicated filter envelope — Mod Env 1 fills the role via the `Filter Source` switch. Mod Env 1's AHDSR sliders are top-level CCs, scored ≈ for `envelope.filter.*`.
+- **Mlg-XD voice mode lacks MONO.** Voice modes are `POLY/UNISON/CHORD/ARP-LATCH` per Owner's Manual p.15 — no dedicated MONO. Closest analogue is UNISON with depth=0. Scored ≈.
+- **`voice.unison_voices` and CC addressability.** P6, P5, OB-X8 expose explicit voice-count CCs (or NRPNs); JUNO-X / Muse / PB12 / Mlg-XD / Summit have unison modes but no top-level voice-count CC published — scored ≈.
+- **`lfo.1.depth` and `lfo.1.target` panel-fixed vs mod-matrix.** Devices with mod-matrix-only LFO routing (Muse, PB12) have the concept but no panel-fixed CCs for destination switches — ≈. Devices with multi-bus depth (OB-X8, Summit) or per-destination depth knobs (JUNO-X) are also ≈ for `depth` since the canonical schema models a single global depth.
+- **`filter.lp.drive` is "pre-filter saturation."** P6's `Distortion Amount` is post-VCA — concept of drive present but not in the canonical position; ≈. JUNO-X / P5 / OB-X8 have no in-engine drive parameter — ✗. Muse `Clipping Level`, PB12 `Ladder Distortion`, Mlg-XD `DRIVE`, Summit `Filter Overdrive` are all pre-filter — ✓.
+- **`master.volume_db`.** PB12 and Mlg-XD have non-programmable master-volume knobs not exposed via CC; scored ✗. Summit `PatchLevel` is NRPN-only — ≈. P6/JUNO-X/P5/OB-X8/Muse expose CC 7 (or AMP LEVEL CC 110 for JUNO-X) but as a 0–127 level rather than dB — ≈ since unit differs.
+
+### Sweep result summary
+
+- ≥3 ✓: **all 35 canonical params** (lowest counts are `osc.sub.octave` = 3 and `osc.sub.level` = 3, exactly at threshold; both already optional in the schema).
+- 2 ✓: none — no demotions applied.
+- 0–1 ✓: none — no removals applied.
+
+The schema (`../subtractive.schema.json`) and ontology companion (`../subtractive-ontology.md`) are unchanged by this sweep.
