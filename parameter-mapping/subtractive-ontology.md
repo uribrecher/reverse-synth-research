@@ -4,6 +4,39 @@ Companion to [`subtractive.schema.json`](./subtractive.schema.json). Explains th
 
 > **Status:** Schema version `0.1`. Reviewed by design only — no JSON Schema validator fixtures yet. See the [MVP spec](../docs/superpowers/specs/2026-05-02-subtractive-ontology-mvp.md) for the explicit risk acceptance.
 
+## Schema architecture: base + engine
+
+The schema is split across two files:
+
+- [`synth-base.schema.json`](./synth-base.schema.json) — engine-agnostic base. Defines the top-level wrapper (`schema_version`, `engine`, `params`) and the `$defs` that every synth engine has in common: `ADSR`, `Voice`, `Master`, the `Envelopes` shape (with `amp` required), and a `CommonParams` container. Stays stable as new engine schemas are added.
+- [`subtractive.schema.json`](./subtractive.schema.json) — extends the base via `allOf`. Constrains `engine` to `const: "subtractive"`, attaches a subtractive-specific `params` (`SubtractiveParams`), and adds engine-specific `$defs`: `Oscillators`, `Noise`, `Filter`, `LFO` with subtractive destination vocabulary, and `SubtractiveEnvelopes` (which extends the base `Envelopes` with an optional `filter` envelope).
+
+```
+synth-base.schema.json                         (engine-agnostic)
+├── ADSR                                       reusable envelope shape
+├── Voice                                      mono / poly / unison + glide + unison_voices
+├── Master                                     volume_db
+├── Envelopes  (requires amp)
+└── CommonParams  (requires envelope, voice; master optional)
+                              ▲
+                              │ allOf
+                              │
+subtractive.schema.json                        (engine-specific)
+├── SubtractiveParams = CommonParams + { osc, noise, filter, lfo, envelope.filter }
+├── SubtractiveEnvelopes = base Envelopes + { filter (optional) }
+├── Oscillators, Oscillator, SubOscillator
+├── Noise
+├── Filter (with lp)
+├── LFO, LFOs
+└── ModulationDestination (subtractive-specific 7-value enum)
+```
+
+Composition uses `allOf` plus `unevaluatedProperties: false` (Draft 2020-12). The `unevaluatedProperties` keyword is `allOf`-aware, so a subtractive instance with `envelope.filter` validates cleanly: the base's `Envelopes` accepts `amp` (required), the subtractive `SubtractiveEnvelopes` accepts the additional `filter`, and nothing outside that union is allowed.
+
+Future engine schemas (FM, organ, wavetable, sample-based, …) will follow the same pattern: `allOf` the base, constrain `engine` to a different `const`, attach their own `params` extending `CommonParams`, and add engine-specific `$defs`.
+
+**v0.1 instance compatibility:** any document valid against the previous monolithic schema validates against this split-schema design unchanged. The split is purely structural.
+
 ## Design rules
 
 1. **Physical units, not normalized stand-ins.** Hz for frequency, ms for time, cents for fine pitch, dB for loudness, 0–1 ratios where there is no natural physical unit. The schema rejects 0–127 MIDI scaling — that is a device-side concern, handled in Phase 4 translators.
@@ -16,34 +49,36 @@ Companion to [`subtractive.schema.json`](./subtractive.schema.json). Explains th
 
 The schema's `x-unit` annotations summarize each param's physical unit. Names that already encode the unit (`cutoff_hz`, `attack_ms`, `volume_db`, `detune_cents`, `pulse_width_pct`) carry it explicitly; names without a unit suffix (`level`, `resonance`, `sustain`, `depth`, `key_tracking`, `drive`, `envelope_amount`) are unitless 0–1 ratios (signed where noted).
 
-| Param | Unit | Range | Notes |
-|---|---|---|---|
-| `osc.{1,2}.shape` | enum | `sine` / `saw` / `square` / `triangle` / `pulse` | |
-| `osc.{1,2}.level` | ratio | 0 – 1 | mixer level into engine; 0 = muted |
-| `osc.{1,2}.detune_cents` | cents | −1200 – 1200 | fine pitch offset; 1200 cents = 1 octave |
-| `osc.{1,2}.octave` | octaves (integer) | −3 – 3 | coarse pitch offset, NOT semitones |
-| `osc.{1,2}.pulse_width_pct` | percent | 0 – 100 | only when `shape == 'pulse'`; 50 = perfect square, extremes = narrow pulse |
-| `osc.sub.octave` | octaves (integer) | enum: −2 or −1 | sub-osc octave below parent osc |
-| `osc.sub.level` | ratio | 0 – 1 | |
-| `noise.color` | enum | `white` / `pink` | spectral tilt; pink rolls off 3 dB/octave |
-| `noise.level` | ratio | 0 – 1 | |
-| `filter.lp.cutoff_hz` | Hz | 20 – 20000 | low-pass cutoff, log-distributed in practice |
-| `filter.lp.resonance` | ratio | 0 – 1 | Q / emphasis; 1 ≈ self-oscillation territory |
-| `filter.lp.envelope_amount` | signed ratio | −1 – 1 | filter-envelope depth into cutoff; negative inverts the envelope |
-| `filter.lp.key_tracking` | ratio | 0 – 1 | how much note pitch tracks cutoff (0 = none, 1 = full key follow) |
-| `filter.lp.drive` | ratio | 0 – 1 | pre-filter saturation amount |
-| `envelope.{amp,filter}.attack_ms` | ms | 0 – 10000 | |
-| `envelope.{amp,filter}.decay_ms` | ms | 0 – 20000 | |
-| `envelope.{amp,filter}.sustain` | ratio | 0 – 1 | sustain level as **fraction of peak**, NOT dB |
-| `envelope.{amp,filter}.release_ms` | ms | 0 – 20000 | |
-| `lfo.1.rate_hz` | Hz | 0.01 – 100 | LFO frequency, log-distributed in practice (sub-audio range) |
-| `lfo.1.shape` | enum | `sine` / `triangle` / `square` / `saw` / `ramp` / `sample_hold` | |
-| `lfo.1.depth` | ratio | 0 – 1 | global modulation depth |
-| `lfo.1.target` | enum | (see destination vocabulary below) | seven-value enum |
-| `voice.mode` | enum | `mono` / `poly` / `unison` | |
-| `voice.glide_ms` | ms | 0 – 5000 | portamento time |
-| `voice.unison_voices` | integer count | 1 – 16 | active voices in unison; ignored if `mode != 'unison'` |
-| `master.volume_db` | dB | −60 – 6 | required *if* `master` is present (the whole `master` section is optional). Referenced to the device's nominal full-scale output (0 dB = unity, +6 dB = mild boost, −60 dB ≈ silent). |
+The **Source** column indicates where each param's `$def` lives: `base` = `synth-base.schema.json` (shared with future engine schemas), `subtractive` = `subtractive.schema.json` (engine-specific). Future engine schemas will reuse every `base` row unchanged.
+
+| Param | Unit | Range | Source | Notes |
+|---|---|---|---|---|
+| `osc.{1,2}.shape` | enum | `sine` / `saw` / `square` / `triangle` / `pulse` | subtractive | |
+| `osc.{1,2}.level` | ratio | 0 – 1 | subtractive | mixer level into engine; 0 = muted |
+| `osc.{1,2}.detune_cents` | cents | −1200 – 1200 | subtractive | fine pitch offset; 1200 cents = 1 octave |
+| `osc.{1,2}.octave` | octaves (integer) | −3 – 3 | subtractive | coarse pitch offset, NOT semitones |
+| `osc.{1,2}.pulse_width_pct` | percent | 0 – 100 | subtractive | only when `shape == 'pulse'`; 50 = perfect square, extremes = narrow pulse |
+| `osc.sub.octave` | octaves (integer) | enum: −2 or −1 | subtractive | sub-osc octave below parent osc |
+| `osc.sub.level` | ratio | 0 – 1 | subtractive | |
+| `noise.color` | enum | `white` / `pink` | subtractive | spectral tilt; pink rolls off 3 dB/octave |
+| `noise.level` | ratio | 0 – 1 | subtractive | |
+| `filter.lp.cutoff_hz` | Hz | 20 – 20000 | subtractive | low-pass cutoff, log-distributed in practice |
+| `filter.lp.resonance` | ratio | 0 – 1 | subtractive | Q / emphasis; 1 ≈ self-oscillation territory |
+| `filter.lp.envelope_amount` | signed ratio | −1 – 1 | subtractive | filter-envelope depth into cutoff; negative inverts the envelope |
+| `filter.lp.key_tracking` | ratio | 0 – 1 | subtractive | how much note pitch tracks cutoff (0 = none, 1 = full key follow) |
+| `filter.lp.drive` | ratio | 0 – 1 | subtractive | pre-filter saturation amount |
+| `envelope.{amp,filter}.attack_ms` | ms | 0 – 10000 | base (`ADSR`) | |
+| `envelope.{amp,filter}.decay_ms` | ms | 0 – 20000 | base (`ADSR`) | |
+| `envelope.{amp,filter}.sustain` | ratio | 0 – 1 | base (`ADSR`) | sustain level as **fraction of peak**, NOT dB |
+| `envelope.{amp,filter}.release_ms` | ms | 0 – 20000 | base (`ADSR`) | |
+| `lfo.1.rate_hz` | Hz | 0.01 – 100 | subtractive | LFO frequency, log-distributed in practice (sub-audio range) |
+| `lfo.1.shape` | enum | `sine` / `triangle` / `square` / `saw` / `ramp` / `sample_hold` | subtractive | |
+| `lfo.1.depth` | ratio | 0 – 1 | subtractive | global modulation depth |
+| `lfo.1.target` | enum | (see destination vocabulary below) | subtractive | seven-value enum |
+| `voice.mode` | enum | `mono` / `poly` / `unison` | base | |
+| `voice.glide_ms` | ms | 0 – 5000 | base | portamento time |
+| `voice.unison_voices` | integer count | 1 – 16 | base | active voices in unison; ignored if `mode != 'unison'` |
+| `master.volume_db` | dB | −60 – 6 | base | required *if* `master` is present (the whole `master` section is optional). Referenced to the device's nominal full-scale output (0 dB = unity, +6 dB = mild boost, −60 dB ≈ silent). |
 
 Conventions:
 
@@ -93,7 +128,9 @@ Required. The schema models a single low-pass filter with `cutoff_hz`, `resonanc
 
 ### Envelopes (`params.envelope`)
 
-`envelope.amp` is required; `envelope.filter` is optional. Both are ADSR with attack/decay/release in ms and sustain as a 0–1 ratio. The PolyBrute 12 has a third per-voice envelope which is unrepresented in the canonical params; analysis-side outputs simply do not target it. The Moog Muse has only two per-voice envelopes (Filter Env + VCA Env per its survey); two additional envelopes added in firmware 1.4 are global mod-matrix sources, not per-voice ADSRs, and so are also unrepresented.
+The `Envelopes` shape lives in `synth-base.schema.json` and requires `amp`; the subtractive schema extends it via `SubtractiveEnvelopes` to add an optional `filter` envelope. Both reuse the base `ADSR` `$def` (attack/decay/release in ms, sustain as a 0–1 ratio of peak). When future engine schemas (FM, organ, …) are added, they will reuse the same `ADSR` shape and add their own engine-specific envelope slots (e.g. per-operator envelopes for FM).
+
+The PolyBrute 12 has a third per-voice envelope which is unrepresented in the canonical params; analysis-side outputs simply do not target it. The Moog Muse has only two per-voice envelopes (Filter Env + VCA Env per its survey); two additional envelopes added in firmware 1.4 are global mod-matrix sources, not per-voice ADSRs, and so are also unrepresented.
 
 ### LFO (`params.lfo.1`)
 
@@ -101,7 +138,9 @@ One LFO is required: `rate_hz`, `shape`, `depth`, `target`. Devices with multipl
 
 ### Voice and master (`params.voice`, `params.master`)
 
-`voice.mode` is required and is one of `mono`, `poly`, `unison`. `voice.glide_ms` and `voice.unison_voices` are optional. The whole `master` section is **optional** — PolyBrute 12 and Minilogue XD expose master volume only as a non-programmable physical pot (not addressable over MIDI), so requiring it would reject canonical instances for those devices. When `master` is present, `master.volume_db` is required and is in dB referenced to the device's nominal output.
+`Voice` and `Master` both live in `synth-base.schema.json` — they are engine-agnostic and apply unchanged to every synth engine.
+
+`voice.mode` is required and is one of `mono`, `poly`, `unison`. `voice.glide_ms` and `voice.unison_voices` are optional. The whole `master` section is **optional** — PolyBrute 12 and Minilogue XD expose master volume only as a non-programmable physical pot (not addressable over MIDI), so requiring it would reject canonical instances for those devices. When `master` is present, `master.volume_db` is required and is in dB referenced to the device's nominal full-scale output.
 
 ## What is not here, and why
 

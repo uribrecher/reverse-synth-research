@@ -29,7 +29,7 @@ The ontology is the single most load-bearing contract in the analysis-to-device 
   8. Sequential Prophet-5 Rev 4 (poly analog)
 - **Survey content per device:** parameter inventory (name, type, range, unit, enum values where applicable, brief acoustic description), modulation routing destinations the device exposes, device-specific quirks worth recording (knob taper, MIDI scaling, special "off" values).
 - **Survey sourcing:** online research (manufacturer manuals, MIDI implementation charts, public synth-engine writeups) plus, for Prophet-6 and JUNO-X, cross-checking against `keyboards-mcp`'s `list_parameters` and existing `midi-map.ts` files.
-- **Canonical ontology** — a single `subtractive.schema.json` covering the common-core subtractive signal path:
+- **Canonical ontology** — a two-file split: `synth-base.schema.json` (engine-agnostic — `ADSR`, `Voice`, `Master`, `Envelopes` shape, top-level wrapper) plus `subtractive.schema.json` (subtractive-specific — extends the base via `allOf`, constrains `engine` to `subtractive`, adds oscillators / noise / filter / LFO / `SubtractiveEnvelopes`). The split is a v0.1 architectural commitment so future engine schemas (FM, organ, wavetable, …) reuse the base. Together they cover the common-core subtractive signal path:
   - Engine identifier and schema version
   - Oscillators (1–2 main + optional sub) with shape, level, detune, octave/coarse, pulse-width
   - Noise generator (optional) with level and color

@@ -2,29 +2,42 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://reverse-synth-research.local/parameter-mapping/subtractive.schema.json",
   "title": "Subtractive Synthesis Canonical Parameters",
-  "description": "Common-core canonical parameter ontology for subtractive polysynths. Comm protocol between the analysis pipeline (audio-analysis-mcp) and the device side (keyboards-mcp). Schema version 0.1 — design-reviewed only, no fixtures yet. Rare/extended features are deferred per the MVP backlog.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": ["schema_version", "engine", "params"],
+  "description": "Common-core canonical parameter ontology for subtractive polysynths. Comm protocol between the analysis pipeline (audio-analysis-mcp) and the device side (keyboards-mcp). Schema version 0.1 — design-reviewed only, no fixtures yet. Extends `synth-base.schema.json` via allOf for the engine-agnostic parts (ADSR, Voice, Master, the `amp` envelope, the top-level wrapper); adds subtractive-specific defs (Oscillators, Noise, Filter, LFO with subtractive destination vocabulary, filter envelope).",
+  "allOf": [
+    { "$ref": "synth-base.schema.json" }
+  ],
   "properties": {
-    "schema_version": { "type": "string", "const": "0.1" },
-    "engine": { "type": "string", "const": "subtractive" },
+    "schema_version": { "const": "0.1" },
+    "engine": { "const": "subtractive" },
     "params": { "$ref": "#/$defs/SubtractiveParams" }
   },
+  "unevaluatedProperties": false,
   "$defs": {
     "SubtractiveParams": {
+      "allOf": [
+        { "$ref": "synth-base.schema.json#/$defs/CommonParams" }
+      ],
       "type": "object",
-      "additionalProperties": false,
-      "required": ["osc", "filter", "envelope", "lfo", "voice"],
+      "required": ["osc", "filter", "lfo"],
       "properties": {
         "osc": { "$ref": "#/$defs/Oscillators" },
         "noise": { "$ref": "#/$defs/Noise" },
         "filter": { "$ref": "#/$defs/Filter" },
-        "envelope": { "$ref": "#/$defs/Envelopes" },
-        "lfo": { "$ref": "#/$defs/LFOs" },
-        "voice": { "$ref": "#/$defs/Voice" },
-        "master": { "$ref": "#/$defs/Master" }
-      }
+        "envelope": { "$ref": "#/$defs/SubtractiveEnvelopes" },
+        "lfo": { "$ref": "#/$defs/LFOs" }
+      },
+      "unevaluatedProperties": false
+    },
+    "SubtractiveEnvelopes": {
+      "allOf": [
+        { "$ref": "synth-base.schema.json#/$defs/Envelopes" }
+      ],
+      "type": "object",
+      "description": "Subtractive engines extend the base Envelopes (which requires `amp`) with an optional `filter` envelope.",
+      "properties": {
+        "filter": { "$ref": "synth-base.schema.json#/$defs/ADSR" }
+      },
+      "unevaluatedProperties": false
     },
     "Oscillators": {
       "type": "object",
@@ -162,47 +175,6 @@
         }
       }
     },
-    "ADSR": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["attack_ms", "decay_ms", "sustain", "release_ms"],
-      "properties": {
-        "attack_ms": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 10000,
-          "x-unit": "ms"
-        },
-        "decay_ms": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 20000,
-          "x-unit": "ms"
-        },
-        "sustain": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1,
-          "x-unit": "ratio",
-          "description": "Sustain level as a ratio of peak."
-        },
-        "release_ms": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 20000,
-          "x-unit": "ms"
-        }
-      }
-    },
-    "Envelopes": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["amp"],
-      "properties": {
-        "amp": { "$ref": "#/$defs/ADSR" },
-        "filter": { "$ref": "#/$defs/ADSR" }
-      }
-    },
     "LFO": {
       "type": "object",
       "additionalProperties": false,
@@ -247,43 +219,7 @@
         "filter.resonance",
         "amp.level"
       ],
-      "description": "Common-core LFO destinations. Full mod-matrix destinations are deferred to the backlog."
-    },
-    "Voice": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["mode"],
-      "properties": {
-        "glide_ms": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 5000,
-          "x-unit": "ms"
-        },
-        "mode": {
-          "type": "string",
-          "enum": ["mono", "poly", "unison"]
-        },
-        "unison_voices": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 16,
-          "description": "Active voices in unison mode. Ignored when mode != 'unison'."
-        }
-      }
-    },
-    "Master": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["volume_db"],
-      "properties": {
-        "volume_db": {
-          "type": "number",
-          "minimum": -60,
-          "maximum": 6,
-          "x-unit": "dB"
-        }
-      }
+      "description": "Common-core LFO destinations for subtractive engines. Full mod-matrix destinations are deferred to the backlog. Other engine schemas (FM, organ, wavetable, …) define their own destination vocabularies."
     }
   }
 }
