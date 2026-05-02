@@ -74,6 +74,17 @@ The MVP uses post-hoc schema validation: emit predictions, denormalize, validate
 
 ResNet-18 pretrained on AudioSet or ImageNet, MobileNet, etc. The MVP's small custom CNN is the simplest thing that works. Backbone swap is a hyperparameter sweep, not new architecture work — defer until the pipeline is validated and we know what bottleneck (capacity vs data) is limiting accuracy.
 
+### Music-pretrained encoder backbones (MERT / AudioMAE / BEATs)
+
+A more targeted upgrade path than ImageNet/AudioSet ResNets. Two phased landing points worth tracking separately:
+
+- **v0.2 — MERT-v1-95M** ([HF page](https://huggingface.co/m-a-p/MERT-v1-95M)). Music-domain self-supervised pretraining means timbre features come for free, which is exactly what subtractive synthesis turns into in the spectrum. Drop-in replacement for the encoder: `AutoModel.from_pretrained("m-a-p/MERT-v1-95M")` → mean-pool over the sustain region → 768-dim → concat with the 88-dim pitch multihot (now 856 dim) → 2-layer MLP → same 3 heads. Native HF transformers loader, raw-waveform input (no spectrogram preprocessing in our code path). 95M params is small enough to fine-tune end-to-end on a single mid-tier GPU. Worth picking up alongside `osc.2` / `noise` / modulation invariance, when the parameter space is big enough that custom-CNN capacity starts to bind.
+- **v0.3 — AudioMAE** ([HF page](https://huggingface.co/hance-ai/audiomae)). Self-supervised on AudioSet, ViT-based with a spatial 8×64 latent map (not just a pooled vector) — gives a 2D feature map for the modulation-invariance temporal-pooling recipe. The right call once we're scaling to multi-engine + full modulation augmentation. BEATs (Microsoft, [unilm repo](https://github.com/microsoft/unilm/tree/master/beats)) is in the same class but ships weights via manual unilm checkpoint download instead of an HF native loader; revisit if MS publishes an HF-native release.
+
+**Skip:** CLAP is a contrastive embedder optimized for semantic-category retrieval — it's tuned for "this is a flute" not "this is a saw at 2 kHz cutoff," so the embeddings won't capture our micro-timbre regression targets well. VGGish/YAMNet have 128/1024-dim outputs and are old; not worth the engineering vs MERT.
+
+Decision deferred until baseline numbers from the 10K/50-epoch MVP run are in.
+
 ### Shared encoder with the modulation expert
 
 Both experts consume mel-spectrograms of the same flattened audio. Sharing the encoder + branching into expert-specific heads is the maximum-sharing option. Cross-cutting decision flagged in both plans; defer until each expert ships independently and we have something to compare against.
@@ -121,6 +132,27 @@ The MVP computes mel-specs on the fly during training. For larger datasets / lon
 ### Real-keyboard recordings via `keyboards-mcp` (synthetic→real gap)
 
 The MVP is purely synthetic. Real audio recorded from Prophet-6 / JUNO-X / Nord via `keyboards-mcp` is the eventual target. Synthetic→real gap is well-documented in inverse-synth research and likely needs domain adaptation, fine-tuning on a small real set, or generative augmentation (impulse responses, room sims, codec artifacts). Big enough that it's its own project; defer until the synthetic-only model is validated.
+
+## Training infrastructure
+
+### Cloud training via HF Jobs + dataset hosting on HF Datasets
+
+The MVP trains locally on the developer's M3 Pro because the workload (10K samples, 707K-param CNN) finishes in well under 15 minutes — cloud at MVP scale is friction, not speed-up. The two scale-up signals that warrant moving off-local: (a) dataset >100K samples + multi-engine renders pushing single-machine render time past an hour, (b) backbone swap to MERT-v1-95M / AudioMAE bumping the trainable param count high enough that MPS becomes the bottleneck.
+
+When that lands, the lightest path for a one-developer research project is:
+
+- **HF Jobs** ([docs](https://huggingface.co/docs/huggingface_hub/guides/jobs)) for managed-GPU training: `hf jobs run --flavor a10g-large train_tone_generation.py`. Per-second billing on T4 / A10G / A100 / H100, no VM management. Requires HF Pro tier ($9/mo).
+- **HF Datasets** for the synthetic dataset: `dataset.push_to_hub("uribrecher/sub-synth-mvp", private=True)` after a one-time local render. Collaborators `load_dataset(...)` and skip the local render entirely. Solves the "everyone re-renders the same 5 minutes of synthesis" friction.
+- **HF Hub** for checkpoint hosting: `model.push_to_hub(...)` from inside the training job. Separate model versions per branch / experiment.
+
+**Skip:**
+- AutoTrain — no-code path doesn't support custom heads (we have 3 task-specific heads), so it doesn't fit our model anyway.
+- Modal Labs ($3.95/h H100) — beautiful Python-native serverless, but the premium pays off for many short jobs, not occasional research runs.
+- RunPod / Lambda Labs — cheaper raw compute ($2.49/h H100 on RunPod) but you manage Pods/SSH/dataset-transfer/checkpoint-upload yourself; the integration time eats the savings.
+- Colab Pro — fine for one-off notebooks, friction at dataset >5–10 GB and reproducibility is poor.
+- AWS SageMaker — way too heavy for one developer.
+
+**Dataset generation stays local** even after this lands. SignalFlow rendering is CPU-bound; `--n-samples 100000` takes ~50 minutes locally, which is fine. Push the result to HF Datasets afterwards. Only revisit cloud rendering if we ever need 1M+ samples in a one-shot batch.
 
 ## Deployment / runtime
 
