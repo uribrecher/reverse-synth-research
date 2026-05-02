@@ -140,8 +140,10 @@ Unit column reflects the schema's `x-unit` annotation (in `../subtractive.schema
 
 ### Sweep result summary
 
-- ≥3 ✓: **all 35 canonical params** (lowest counts are `osc.sub.octave` = 3 and `osc.sub.level` = 3, exactly at threshold; both already optional in the schema).
-- 2 ✓: none — no demotions applied.
-- 0–1 ✓: none — no removals applied.
+Acceptance rule: Count is total of ✓ and ≈ across the eight devices (per the matrix description above). The sweep counts ≈ as supporting the param.
+
+- Count ≥ 3 (✓ or ≈): **all 35 canonical params** (lowest counts are `osc.sub.octave` = 3 and `osc.sub.level` = 3, exactly at threshold; both already optional in the schema).
+- Count = 2: none — no demotions applied.
+- Count ≤ 1: none — no removals applied.
 
 The schema (`../subtractive.schema.json`) and ontology companion (`../subtractive-ontology.md`) are unchanged by this sweep.

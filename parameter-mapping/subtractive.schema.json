@@ -15,7 +15,7 @@
     "SubtractiveParams": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["osc", "filter", "envelope", "lfo", "voice", "master"],
+      "required": ["osc", "filter", "envelope", "lfo", "voice"],
       "properties": {
         "osc": { "$ref": "#/$defs/Oscillators" },
         "noise": { "$ref": "#/$defs/Noise" },

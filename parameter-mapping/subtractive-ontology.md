@@ -8,7 +8,7 @@ Companion to [`subtractive.schema.json`](./subtractive.schema.json). Explains th
 
 1. **Physical units, not normalized stand-ins.** Hz for frequency, ms for time, cents for fine pitch, dB for loudness, 0–1 ratios where there is no natural physical unit. The schema rejects 0–127 MIDI scaling — that is a device-side concern, handled in Phase 4 translators.
 2. **Hierarchical names as object structure.** A canonical param like `filter.lp.cutoff_hz` is encoded as nested objects (`params.filter.lp.cutoff_hz`), not a flat string-keyed dict. The schema models the canonical structure directly.
-3. **Optional sections for cross-device flexibility.** `osc.2`, `osc.sub`, `noise`, `envelope.filter`, and `voice.glide_ms` are all optional. A minimal Prophet-5-style instance and a Muse-style instance both validate without forcing irrelevant params.
+3. **Optional sections for cross-device flexibility.** `osc.2`, `osc.sub`, `noise`, `envelope.filter`, `voice.glide_ms`, and the entire `master` section are optional. A minimal Prophet-5-style instance, a Muse-style instance, and a PolyBrute-12-style instance (no MIDI-addressable master volume) all validate without forcing irrelevant params.
 4. **Common-core only.** A canonical param exists only if it can be sensibly mapped to most of the surveyed devices. Anything that requires deep per-device interpretation lives in the backlog, not the schema. See "What is not here" below.
 5. **`x-unit` annotation.** A custom JSON Schema keyword (validators ignore unknown keywords) carries the physical unit. Future codegen will use this to emit Pydantic / TypeScript types with the right unit semantics. The keyword is not load-bearing for v0.1 validation.
 
@@ -43,7 +43,7 @@ The schema's `x-unit` annotations summarize each param's physical unit. Names th
 | `voice.mode` | enum | `mono` / `poly` / `unison` | |
 | `voice.glide_ms` | ms | 0 – 5000 | portamento time |
 | `voice.unison_voices` | integer count | 1 – 16 | active voices in unison; ignored if `mode != 'unison'` |
-| `master.volume_db` | dB | −60 – 6 | referenced to the device's nominal full-scale output (0 dB = unity, +6 dB = mild boost, −60 dB ≈ silent) |
+| `master.volume_db` | dB | −60 – 6 | required *if* `master` is present (the whole `master` section is optional). Referenced to the device's nominal full-scale output (0 dB = unity, +6 dB = mild boost, −60 dB ≈ silent). |
 
 Conventions:
 
@@ -65,7 +65,7 @@ The `ModulationDestination` enum in the schema is exactly seven values:
 | `osc.pwm` | LFO modulates pulse width — classic PWM movement. | All eight devices when shape == pulse. |
 | `osc.amp` | LFO modulates oscillator amplitude — tremolo at the source. | All eight devices. |
 | `filter.cutoff` | LFO sweeps the LP cutoff — wah/swell movement. | Every surveyed device exposes this; it is the canonical "filter wobble". |
-| `filter.resonance` | LFO modulates resonance — uncommon but musical. | Six of eight devices expose it directly; the others (Prophet-5, OB-X8) reach it via mod matrix. |
+| `filter.resonance` | LFO modulates resonance — uncommon but musical. | Reachable on Muse, PolyBrute 12, and Summit via their mod matrices (three of eight devices — barely common-core, the weakest entry in this enum). The other five (Prophet-6, JUNO-X, Prophet-5, OB-X8, Minilogue XD) expose only filter cutoff as a direct LFO destination, with no panel- or matrix-level path to resonance. Translators on those devices must mark this destination as unsupported. Kept in the canonical enum because the analysis side may genuinely detect it. |
 | `amp.level` | LFO modulates final VCA — output tremolo. | All eight devices, often as a hard-wired LFO destination. |
 
 Full mod-matrix destinations (envelope-as-source, mod wheel, aftertouch, per-osc-pitch, FX sends, etc.) are deferred — see the backlog.
@@ -78,7 +78,7 @@ Full mod-matrix destinations (envelope-as-source, mod wheel, aftertouch, per-osc
 
 Mapping notes across the surveyed devices:
 - **Prophet-6, Prophet-5, OB-X8, Moog Muse:** two analog VCOs; `shape` enums map directly. PWM is per-osc continuous.
-- **JUNO-X (Analog Synth):** two virtual analog oscillators. JUNO-X exposes more shape variants (e.g. `SAW-DW`) — these collapse to `saw` for canonical purposes.
+- **JUNO-X (Analog Synth):** **single oscillator section with mixed sources** (pulse / Super-SAW + sawtooth + square sub-osc + noise) per the JUNO-X survey, not two distinct oscillators. The canonical schema's `osc.2.*` fields therefore have no clean JUNO-X mapping (coverage matrix marks them ✗). Translators should populate only `osc.1.*` and `osc.sub.*` for the JUNO-X. JUNO-X exposes more shape variants (e.g. `SAW-DW`) — these collapse to `saw` for canonical purposes.
 - **PolyBrute 12:** two oscillators with extra wave-shaping (Brute / Metalizer / Ultrasaw). The wave-shaping params are out of common-core; the oscillator's underlying shape still maps to `shape`.
 - **Minilogue XD:** two VCOs, plus the Multi-Engine which is excluded from this ontology entirely.
 - **Novation Summit:** three NCOs per voice. Common-core uses only osc.1 and osc.2; the third oscillator is captured in the survey but not in the schema.
@@ -93,7 +93,7 @@ Required. The schema models a single low-pass filter with `cutoff_hz`, `resonanc
 
 ### Envelopes (`params.envelope`)
 
-`envelope.amp` is required; `envelope.filter` is optional. Both are ADSR with attack/decay/release in ms and sustain as a 0–1 ratio. Devices with a third "modulation envelope" (Moog Muse, PolyBrute 12) leave that envelope unrepresented in the canonical params; analysis-side outputs simply do not target it.
+`envelope.amp` is required; `envelope.filter` is optional. Both are ADSR with attack/decay/release in ms and sustain as a 0–1 ratio. The PolyBrute 12 has a third per-voice envelope which is unrepresented in the canonical params; analysis-side outputs simply do not target it. The Moog Muse has only two per-voice envelopes (Filter Env + VCA Env per its survey); two additional envelopes added in firmware 1.4 are global mod-matrix sources, not per-voice ADSRs, and so are also unrepresented.
 
 ### LFO (`params.lfo.1`)
 
@@ -101,13 +101,13 @@ One LFO is required: `rate_hz`, `shape`, `depth`, `target`. Devices with multipl
 
 ### Voice and master (`params.voice`, `params.master`)
 
-`voice.mode` is required and is one of `mono`, `poly`, `unison`. `voice.glide_ms` and `voice.unison_voices` are optional. `master.volume_db` is required, in dB referenced to the device's nominal output.
+`voice.mode` is required and is one of `mono`, `poly`, `unison`. `voice.glide_ms` and `voice.unison_voices` are optional. The whole `master` section is **optional** — PolyBrute 12 and Minilogue XD expose master volume only as a non-programmable physical pot (not addressable over MIDI), so requiring it would reject canonical instances for those devices. When `master` is present, `master.volume_db` is required and is in dB referenced to the device's nominal output.
 
 ## What is not here, and why
 
 The "common-core" rule deliberately omits features that some devices have but others do not. These all have stub entries in the [backlog](../docs/superpowers/specs/2026-05-02-subtractive-ontology-backlog.md):
 
-- **Cross-modulation, hard sync, ring modulation, oscillator FM** — present on PolyBrute 12, JUNO-X Analog Synth, Muse, OB-X8, Summit; absent on Prophet-6, Minilogue XD, Prophet-5 (without poly-mod). Including them would force per-device fallbacks into the schema.
+- **Cross-modulation, hard sync, ring modulation, oscillator FM** — excluded from the schema regardless of which devices have them. Most surveyed devices expose at least one of these (PolyBrute 12, JUNO-X Analog Synth, Muse, OB-X8, Summit have a rich set; Prophet-6 has hard sync via NRPN; Minilogue XD has SYNC / RING / CROSS MOD DEPTH; Prophet-5's Poly-Mod hits a similar surface). Each device implements them differently with different routing topologies, so any common-core canonicalization would force per-device fallbacks. Surveys document each device's specific support; translators handle the gap by leaving these unset.
 - **Dual filters in series/parallel/morph (PolyBrute 12), multi-mode filter (OB-X8, Summit)** — modeled as a single LP for v0.1.
 - **Multiple LFOs and full mod matrix** — only `lfo.1` and the seven canonical destinations for v0.1.
 - **Third (modulation) envelope** — analysis side does not yet predict it.
