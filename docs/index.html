@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>reverse-synth-research — Sounds &amp; Recreation</title>
+<meta name="description" content="Design docs for the ML inverse-synthesis pipeline — the analysis architecture behind sound recreation.">
+<meta property="og:title" content="reverse-synth-research — Sounds &amp; Recreation">
+<meta property="og:description" content="Design docs for the ML inverse-synthesis pipeline.">
+<meta property="og:image" content="https://uribrecher.github.io/sounds-and-recreation/assets/img/hero.png">
+<link rel="icon" href="site-assets/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="site-assets/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="site-assets/favicon-16.png">
+<link rel="apple-touch-icon" href="site-assets/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="site-assets/brand.css">
+<style>:root{--accent:#f48fb1}</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="brand" href="https://uribrecher.github.io/sounds-and-recreation/"><img src="site-assets/mark.webp" alt="Sounds & Recreation logo"> Sounds &amp; Recreation</a>
+  <div class="nav-links">
+    <a href="https://uribrecher.github.io/sounds-and-recreation/#repos">All repos</a>
+    <a class="ghbtn" href="https://github.com/uribrecher/reverse-synth-research">★ GitHub</a>
+  </div>
+</nav>
+
+<header class="repo-hero wrap">
+  <span class="lang">Research / Markdown</span>
+  <h1>reverse-synth-research</h1>
+  <p class="lead">Research and design notes for the machine-learning analysis pipeline — the architecture that will power audio-analysis-mcp's sound matching.</p>
+  <div class="cta">
+    <a class="btn primary" href="https://github.com/uribrecher/reverse-synth-research">★ View on GitHub</a>
+    <a class="btn ghost" href="https://github.com/uribrecher/reverse-synth-research">Browse the design docs</a>
+  </div>
+</header>
+
+<section class="section">
+  <div class="wrap">
+    <div class="label">What it is</div>
+    <h2>Designing the inverse-synthesis pipeline</h2>
+    <p class="sub">A documentation-only repo defining a "horizontal" architecture of three orthogonal analysis experts plus a parameter-mapping stage — to be implemented inside audio-analysis-mcp. The pivot from an earlier vertical pipeline avoids cascading errors.</p>
+    <div class="feat">
+      <div class="item"><strong>Amplitude expert</strong><br>DSP envelope follower → ADSR</div>
+      <div class="item"><strong>Modulation expert</strong><br>RNN / CNN → LFO parameters</div>
+      <div class="item"><strong>Tone-generation expert</strong><br>CNN → engine + tone params (modulation-invariant)</div>
+      <div class="item"><strong>Parameter mapping</strong><br>Canonical parameter ontology + per-device translator</div>
+      <div class="item"><strong>Engine classification</strong><br>A softmax head on the tone expert — no separate detection phase</div>
+      <div class="item"><strong>Training setup</strong><br>SignalFlow renderer, Sobol / Latin-Hypercube sampling, shared baseline presets</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="label">In the pipeline</div>
+    <h2>Where it fits</h2>
+    <div class="flow">
+      <span class="node">Audio</span>→<span class="node on">Analysis</span>→<span class="node">Agent</span>→<span class="node">MIDI</span>→<span class="node">Synth</span>
+    </div>
+    <p class="sub" style="margin-top:16px">Design work for the <strong>Analysis</strong> stage — the experts that infer synth parameters from sound. Code lands in audio-analysis-mcp.</p>
+    <div class="linkrow">
+      <a href="https://github.com/uribrecher/reverse-synth-research">GitHub</a>
+      <a href="https://github.com/uribrecher/audio-analysis-mcp">audio-analysis-mcp</a>
+      <a href="https://uribrecher.github.io/sounds-and-recreation/">← The collection</a>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="brand"><img src="site-assets/mark.webp" alt=""> <span>Sounds &amp; Recreation</span></div>
+    Open-source audio recreation · GPL-3.0 · <a href="https://github.com/uribrecher">GitHub</a>
+  </div>
+</footer>
+
+</body>
+</html>
