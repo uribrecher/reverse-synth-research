@@ -4,78 +4,77 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>reverse-synth-research — Sounds &amp; Recreation</title>
-<meta name="description" content="Design docs for the ML inverse-synthesis pipeline — the analysis architecture behind sound recreation.">
+<meta name="description" content="Design notes for the ML analysis pipeline behind Sounds &amp; Recreation — amplitude/ADSR, modulation, and tone-generation experts.">
 <meta property="og:title" content="reverse-synth-research — Sounds &amp; Recreation">
-<meta property="og:description" content="Design docs for the ML inverse-synthesis pipeline.">
+<meta property="og:description" content="Design notes for the ML analysis pipeline behind Sounds &amp; Recreation — amplitude/ADSR, modulation, and tone-generation experts.">
 <meta property="og:image" content="https://uribrecher.github.io/sounds-and-recreation/assets/img/hero.png">
 <link rel="icon" href="site-assets/favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="site-assets/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="site-assets/favicon-16.png">
-  <link rel="icon" type="image/svg+xml" href="site-assets/favicon.svg">
+<link rel="icon" type="image/svg+xml" href="site-assets/favicon.svg">
 <link rel="apple-touch-icon" href="site-assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="site-assets/brand.css">
-<style>:root{--accent:#f48fb1}</style>
 </head>
-<body>
+<body style="--accent:#f48fb1;--accent-ink:#ab4367;--accent-soft:#fce5ed">
 
 <nav class="nav">
-  <a class="brand" href="https://uribrecher.github.io/sounds-and-recreation/"><img src="site-assets/mark.webp" alt=""> Sounds &amp; Recreation</a>
+  <a class="brand" href="https://uribrecher.github.io/sounds-and-recreation/"><picture><source srcset="site-assets/mark.webp" type="image/webp"><img src="site-assets/mark.png" alt=""></picture> Sounds &amp; Recreation</a>
   <div class="nav-links">
     <a href="https://uribrecher.github.io/sounds-and-recreation/#repos">All repos</a>
     <a class="ghbtn" href="https://github.com/uribrecher/reverse-synth-research">★ GitHub</a>
   </div>
 </nav>
 
-<header class="repo-hero wrap">
-  <span class="lang">Research / Markdown</span>
+<header class="hero wrap">
+  <div class="glow"></div>
+  <span class="lang">Research · design notes</span><span class="wip">Early development</span>
   <h1>reverse-synth-research</h1>
-  <p class="lead">Research and design notes for the machine-learning analysis pipeline — the architecture that will power audio-analysis-mcp's sound matching.</p>
+  <p class="lead">Design notes for the ML analysis pipeline behind Sounds &amp; Recreation — how a recorded tone is decomposed into the parameters that drive a synthesizer. A set of specialist experts, not a packaged library.</p>
+  <div class="chips">
+    <span class="chip"><span class="dot"></span> Amplitude / ADSR</span>
+    <span class="chip"><span class="dot"></span> Modulation</span>
+    <span class="chip"><span class="dot"></span> Tone generation</span>
+  </div>
   <div class="cta">
     <a class="btn primary" href="https://github.com/uribrecher/reverse-synth-research">★ View on GitHub</a>
-    <a class="btn ghost" href="https://github.com/uribrecher/reverse-synth-research">Browse the design docs</a>
+    <a class="btn ghost" href="https://uribrecher.github.io/sounds-and-recreation/#repos">Back to the collection</a>
   </div>
 </header>
 
 <section class="section">
   <div class="wrap">
-    <div class="label">What it is</div>
-    <h2>Designing the inverse-synthesis pipeline</h2>
-    <p class="sub">A documentation-only repo defining a "horizontal" architecture of three orthogonal analysis experts plus a parameter-mapping stage — to be implemented inside audio-analysis-mcp. The pivot from an earlier vertical pipeline avoids cascading errors.</p>
+    <div class="label">The experts</div>
+    <h2>Breaking a tone into parameters</h2>
+    <p class="sub">Each expert tackles one dimension of the inverse-synthesis problem — going from a recorded sound back to the settings that would produce it.</p>
     <div class="feat">
-      <div class="item"><strong>Amplitude expert</strong><br>DSP envelope follower → ADSR</div>
-      <div class="item"><strong>Modulation expert</strong><br>RNN / CNN → LFO parameters</div>
-      <div class="item"><strong>Tone-generation expert</strong><br>CNN → engine + tone params (modulation-invariant)</div>
-      <div class="item"><strong>Parameter mapping</strong><br>Canonical parameter ontology + per-device translator</div>
-      <div class="item"><strong>Engine classification</strong><br>A softmax head on the tone expert — no separate detection phase</div>
-      <div class="item"><strong>Training setup</strong><br>SignalFlow renderer, Sobol / Latin-Hypercube sampling, shared baseline presets</div>
+      <div class="item"><strong>Amplitude / ADSR expert</strong><p>Recovers the envelope — attack, decay, sustain and release — from the note's amplitude over time.</p></div>
+      <div class="item"><strong>Modulation expert</strong><p>Characterizes vibrato, tremolo and LFO movement — the periodic motion that gives a patch life.</p></div>
+      <div class="item"><strong>Tone-generation expert</strong><p>Infers the underlying engine and oscillator content — subtractive, FM, organ or sample-based.</p></div>
+      <div class="item"><strong>Inverse synthesis</strong><p>Combines the experts into a parameter prediction that a synth model can actually apply.</p></div>
+      <div class="item"><strong>Experiments &amp; plots</strong><p>Notebook-style explorations on real songs, with the figures the design decisions are based on.</p></div>
+      <div class="item"><strong>Feeds the analysis server</strong><p>Findings here inform the algorithms exposed by audio-analysis-mcp.</p></div>
     </div>
   </div>
 </section>
 
-<section class="section">
+<section class="section alt center">
   <div class="wrap">
-    <div class="label">In the pipeline</div>
-    <h2>Where it fits</h2>
+    <div class="label">Where it fits</div>
+    <h2>The research behind the analysis</h2>
+    <p class="sub">This work shapes how the analysis stage turns audio into synth parameters.</p>
     <div class="flow">
       <span class="node">Audio</span>→<span class="node on">Analysis</span>→<span class="node">Agent</span>→<span class="node">MIDI</span>→<span class="node">Synth</span>
-    </div>
-    <p class="sub" style="margin-top:16px">Design work for the <strong>Analysis</strong> stage — the experts that infer synth parameters from sound. Code lands in audio-analysis-mcp.</p>
-    <div class="linkrow">
-      <a href="https://github.com/uribrecher/reverse-synth-research">GitHub</a>
-      <a href="https://github.com/uribrecher/audio-analysis-mcp">audio-analysis-mcp</a>
-      <a href="https://uribrecher.github.io/sounds-and-recreation/">← The collection</a>
+      <span class="wrap-note">reverse-synth-research is the methodology layer underneath the Analysis stage.</span>
     </div>
   </div>
 </section>
 
 <footer class="footer">
-  <div class="wrap">
-    <div class="brand"><img src="site-assets/mark.webp" alt=""> <span>Sounds &amp; Recreation</span></div>
-    Open-source audio recreation · GPL-3.0 · <a href="https://github.com/uribrecher">GitHub</a>
-  </div>
+  <div class="fb"><picture><source srcset="site-assets/mark.webp" type="image/webp"><img src="site-assets/mark.png" alt=""></picture> Sounds &amp; Recreation</div>
+  Open-source audio recreation · GPL-3.0 · <a href="https://github.com/uribrecher/reverse-synth-research">GitHub</a> · <a href="https://uribrecher.github.io/sounds-and-recreation/#repos">The collection</a>
 </footer>
 
 </body>
