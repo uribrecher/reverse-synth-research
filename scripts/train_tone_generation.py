@@ -30,7 +30,7 @@ from torch.utils.data import DataLoader, Subset
 
 # Sibling-script import: `_eval_helpers.py` lives in the same scripts/ dir but
 # isn't a package member, so we have to put scripts/ on sys.path. The package
-# imports below DON'T need a sys.path hack — `audio_analysis_mcp` is installed
+# imports below DON'T need a sys.path hack — `tone_generation` is installed
 # editable via `uv sync --dev` and resolved through site-packages.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -169,7 +169,12 @@ def main() -> None:
     # Final eval on test set with the best checkpoint. Uses the shared helper,
     # which adds round-trip mel cosine + 4x4 confusion matrix on top of the
     # per-param metrics + schema validation that the per-epoch loop tracked.
-    model.load_state_dict(torch.load(args.checkpoint_out, map_location=device))
+    try:
+        state_dict = torch.load(args.checkpoint_out, map_location=device, weights_only=True)
+    except Exception as exc:  # noqa: BLE001 — fallback path for legacy/custom-class checkpoints
+        print(f"warning: torch.load(weights_only=True) failed ({exc!r}); falling back to weights_only=False")
+        state_dict = torch.load(args.checkpoint_out, map_location=device, weights_only=False)
+    model.load_state_dict(state_dict)
     test_metrics = compute_full_eval(
         model, full, test_idx, device, batch_size=args.batch_size
     )

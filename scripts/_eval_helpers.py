@@ -129,15 +129,17 @@ def compute_full_eval(
     # extraction below use the module-level _SAMPLE_RATE / _TOTAL_DURATION_S,
     # so a regenerated dataset with different rate/duration would silently
     # produce a meaningless cosine. Fail loud instead.
-    assert dataset.sample_rate == _SAMPLE_RATE, (
-        f"dataset.sample_rate={dataset.sample_rate} != _SAMPLE_RATE={_SAMPLE_RATE}; "
-        "regenerate dataset or update _eval_helpers constants"
-    )
-    assert dataset.total_duration_s == _TOTAL_DURATION_S, (
-        f"dataset.total_duration_s={dataset.total_duration_s} != "
-        f"_TOTAL_DURATION_S={_TOTAL_DURATION_S}; "
-        "regenerate dataset or update _eval_helpers constants"
-    )
+    if dataset.sample_rate != _SAMPLE_RATE:
+        raise ValueError(
+            f"dataset.sample_rate={dataset.sample_rate} != _SAMPLE_RATE={_SAMPLE_RATE}; "
+            "regenerate dataset or update _eval_helpers constants"
+        )
+    if dataset.total_duration_s != _TOTAL_DURATION_S:
+        raise ValueError(
+            f"dataset.total_duration_s={dataset.total_duration_s} != "
+            f"_TOTAL_DURATION_S={_TOTAL_DURATION_S}; "
+            "regenerate dataset or update _eval_helpers constants"
+        )
     model.eval()
     loader: DataLoader[Any] = DataLoader(
         Subset(dataset, indices),

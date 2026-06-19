@@ -33,6 +33,10 @@ def _build_voice(
     amp_adsr: dict[str, float],
 ) -> Any:
     """Build a single voice: osc -> LP -> amp env. Returns an unrooted SignalFlow node."""
+    if shape not in _SHAPE_TO_OSC_CLASS:
+        raise ValueError(
+            f"shape must be one of {sorted(_SHAPE_TO_OSC_CLASS)}, got {shape!r}"
+        )
     osc_class_name = _SHAPE_TO_OSC_CLASS[shape]
     if not hasattr(sf_lib, osc_class_name):
         raise RuntimeError(

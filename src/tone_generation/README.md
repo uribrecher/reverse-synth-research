@@ -11,9 +11,9 @@ All outputs are normalized to the canonical `subtractive.schema.json` instance.
 
 ## References
 
-- **Spec:** [`../../../docs/superpowers/specs/completed/2026-05-02-subtractive-tone-training-mvp.md`](../../../docs/superpowers/specs/completed/2026-05-02-subtractive-tone-training-mvp.md)
-- **Backlog (out-of-scope items):** [`../../../docs/superpowers/specs/2026-05-02-subtractive-tone-training-backlog.md`](../../../docs/superpowers/specs/2026-05-02-subtractive-tone-training-backlog.md)
-- **Canonical schema:** [`../../../parameter-mapping/subtractive.schema.json`](../../../parameter-mapping/subtractive.schema.json)
+- **Spec:** [`../../docs/superpowers/specs/completed/2026-05-02-subtractive-tone-training-mvp.md`](../../docs/superpowers/specs/completed/2026-05-02-subtractive-tone-training-mvp.md)
+- **Backlog (out-of-scope items):** [`../../docs/superpowers/specs/2026-05-02-subtractive-tone-training-backlog.md`](../../docs/superpowers/specs/2026-05-02-subtractive-tone-training-backlog.md)
+- **Canonical schema:** [`../../parameter-mapping/subtractive.schema.json`](../../parameter-mapping/subtractive.schema.json)
 
 ## End-to-end workflow
 
@@ -91,4 +91,4 @@ Items deliberately deferred from the MVP — engine classifier head, modulation
 invariance training, additional `osc` / `master` / filter parameters,
 real-keyboard recordings, transcription-noise augmentation, hyperparameter
 sweeps, etc. — live in
-[`../../../docs/superpowers/specs/2026-05-02-subtractive-tone-training-backlog.md`](../../../docs/superpowers/specs/2026-05-02-subtractive-tone-training-backlog.md).
+[`../../docs/superpowers/specs/2026-05-02-subtractive-tone-training-backlog.md`](../../docs/superpowers/specs/2026-05-02-subtractive-tone-training-backlog.md).

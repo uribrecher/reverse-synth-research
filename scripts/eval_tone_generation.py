@@ -21,7 +21,7 @@ import torch
 
 # Sibling-script import (see train_tone_generation.py for the same comment):
 # `_eval_helpers.py` lives in scripts/ and is not packaged, so we put scripts/
-# on sys.path. The `audio_analysis_mcp` package is editable-installed.
+# on sys.path. The `tone_generation` package is editable-installed.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from _eval_helpers import _split_indices, compute_full_eval  # noqa: E402
@@ -63,7 +63,12 @@ def main() -> None:
     print(f"dataset: total={len(full)} test={len(test_idx)}")
 
     model = ToneGenerationCNN().to(device)
-    model.load_state_dict(torch.load(args.checkpoint, map_location=device))
+    try:
+        state_dict = torch.load(args.checkpoint, map_location=device, weights_only=True)
+    except Exception as exc:  # noqa: BLE001 — fallback path for legacy/custom-class checkpoints
+        print(f"warning: torch.load(weights_only=True) failed ({exc!r}); falling back to weights_only=False")
+        state_dict = torch.load(args.checkpoint, map_location=device, weights_only=False)
+    model.load_state_dict(state_dict)
 
     metrics = compute_full_eval(
         model, full, test_idx, device, batch_size=args.batch_size

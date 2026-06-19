@@ -104,7 +104,13 @@ def validate_canonical(instance: dict[str, Any]) -> None:
 def build_canonical_instance(
     *, shape: str, cutoff_hz: float, resonance: float
 ) -> dict[str, Any]:
-    """Build a schema-conformant subtractive instance from the 3 free MVP params."""
+    """Build a subtractive instance from the 3 free MVP params.
+
+    Validates ``shape`` against ``SHAPE_LABELS``, but does NOT range-check
+    ``cutoff_hz`` / ``resonance`` — out-of-range values produce a structurally
+    valid dict that will fail ``validate_canonical``. Pass values within the
+    canonical schema's bounds, or call ``validate_canonical`` to enforce them.
+    """
     if shape not in SHAPE_LABELS:
         raise ValueError(f"shape must be one of {SHAPE_LABELS}, got {shape!r}")
     return {
