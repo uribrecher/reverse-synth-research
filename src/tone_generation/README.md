@@ -17,7 +17,7 @@ All outputs are normalized to the canonical `subtractive.schema.json` instance.
 
 ## End-to-end workflow
 
-All commands run from the `audio-analysis-mcp/` repo root.
+All commands run from the `reverse-synth-research/` repo root.
 
 ### 1. Generate dataset
 

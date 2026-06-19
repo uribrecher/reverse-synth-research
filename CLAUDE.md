@@ -4,7 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Directory Is
 
-A **research-planning directory** — no source code, no build system, no tests. It contains design documents for the ML research that will live inside `audio-analysis-mcp` (sibling Python directory).
+Primarily a **research-design repository** — design documents for the ML analysis pipeline (the three analysis experts + parameter mapping) destined for the sibling `audio-analysis-mcp` Python directory. `docs/` is a GitHub Pages site.
+
+It **also hosts the subtractive tone-generation training pipeline** — a `uv` Python project relocated here from `audio-analysis-mcp` (issue #47) to sit beside its specs:
+
+- `src/tone_generation/` — renderer / dataset / model / schema_io (the training package)
+- `scripts/` — `generate_subtractive_dataset.py`, `train_tone_generation.py`, `eval_tone_generation.py`
+- `tests/` — `test_tone_generation_*.py`; `scratch/` — SignalFlow explorers
+
+```bash
+uv sync --dev          # install (incl. signalflow, torch)
+uv run pytest          # full suite (-m "not slow" skips the train/eval loop)
+uv run mypy src/       # type-check
+```
 
 ## Architecture: Three Analysis Experts + Parameter Mapping
 
