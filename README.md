@@ -10,16 +10,26 @@ Alongside the design docs, this repo holds the one **runnable** piece so far: th
 
 The parent project listens to a song, figures out the synth patch behind a sound, and reproduces it on hardware. Audio analysis is split into three orthogonal **experts**, each stripping out one concern; their canonical outputs merge and get translated to per-device knobs:
 
-```
-audio ─→ [amplitude]       ─→ ADSR
-      ─→ [modulation]      ─→ LFO / mod params
-      ─→ [tone-generation] ─→ engine + static tone params   ←  THIS pipeline
-                                        │
-              unified canonical params (subtractive.schema.json)
-                                        │
-                              [parameter-mapping]
-                                        │
-                     per-device MIDI via keyboards-mcp  →  🎹
+```mermaid
+flowchart TD
+    audio([audio])
+    audio --> amplitude[amplitude expert]
+    audio --> modulation[modulation expert]
+    audio --> tone["tone-generation expert<br/>(THIS pipeline)"]
+
+    amplitude --> adsr[ADSR]
+    modulation --> lfo[LFO / mod params]
+    tone --> static[engine + static tone params]
+
+    adsr --> merged["unified canonical params<br/>(subtractive.schema.json)"]
+    lfo --> merged
+    static --> merged
+
+    merged --> pm[parameter-mapping]
+    pm --> kb["per-device MIDI via keyboards-mcp 🎹"]
+
+    classDef here fill:#fde68a,stroke:#b45309,color:#000;
+    class tone here;
 ```
 
 This repo trains the **tone-generation expert**: given an isolated note — plus the pitches being played, which an upstream transcription step supplies — it predicts the *static* tone parameters of a subtractive synth (what the oscillator and filter are doing). Its output is a canonical [`subtractive.schema.json`](parameter-mapping/subtractive.schema.json) instance, the same contract `parameter-mapping/` will consume to drive [`keyboards-mcp`](https://github.com/uribrecher/keyboards-mcp).
@@ -30,15 +40,20 @@ Today it's a deliberately thin **MVP** predicting three parameters — see [Stat
 
 There are no labeled real-world recordings of "this audio = these synth knobs," so we **generate** perfectly-labeled data with the same synth engine we're trying to invert, then learn the inverse:
 
+```mermaid
+flowchart LR
+    gen["1 · generate<br/>SignalFlow renderer,<br/>randomly-sampled params"]
+    train["2 · train<br/>conditioned CNN"]
+    eval["3 · eval<br/>per-param metrics +<br/>round-trip mel cosine +<br/>schema validation"]
+
+    gen -->|"samples/*.wav<br/>labels.jsonl + manifest.json"| train
+    train -->|checkpoint.pt| eval
+    eval --> report([eval_report.json])
 ```
-1. generate ─ a SignalFlow renderer makes N synthetic notes/chords with known,
-              randomly-sampled params (osc shape, LP cutoff, resonance)
-              → samples/*.wav + labels.jsonl + manifest.json
-2. train    ─ a conditioned CNN learns  params ← (log-mel of the sustain region,
-              the played MIDI pitches)   → checkpoint.pt
-3. eval     ─ per-param metrics + a round-trip check (re-render the prediction and
-              compare mel-spectrograms) + schema validation → eval_report.json
-```
+
+- **generate** — render N synthetic notes/chords with known params (osc shape, LP cutoff, resonance).
+- **train** — learn `params ← (log-mel of the sustain region, the played MIDI pitches)`.
+- **eval** — score predictions, then re-render them and compare spectrograms.
 
 The renderer is both the **data source** and the **eval oracle**: at eval time we re-render the model's predicted params and measure how close the result *sounds* to the input (mel-cosine similarity). "Good" therefore means "reproduces the sound," not merely "matches the numbers."
 

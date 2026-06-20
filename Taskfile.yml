@@ -70,5 +70,8 @@ tasks:
 
   clean:
     desc: Remove generated training artifacts (dataset, checkpoint, eval report) under DATASET_DIR
+    preconditions:
+      - sh: 'test -n "{{.DATASET_DIR}}" && test "{{.DATASET_DIR}}" != "/" && test "{{.DATASET_DIR}}" != "." && test "{{.DATASET_DIR}}" != "$HOME"'
+        msg: 'Refusing to clean: DATASET_DIR ("{{.DATASET_DIR}}") is empty, "/", ".", or $HOME — set it to a real subdirectory.'
     cmds:
-      - rm -rf {{.DATASET_DIR}}
+      - rm -rf "{{.DATASET_DIR}}"
