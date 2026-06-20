@@ -1,0 +1,74 @@
+# Taskfile for the subtractive tone-generation training pipeline.
+#
+# Install the task runner: https://taskfile.dev  (macOS: `brew install go-task`)
+# Then run `task` (or `task --list`) to see everything below.
+#
+# Override any var inline, e.g.  `task generate N_SAMPLES=2000`
+version: '3'
+
+vars:
+  DATASET_DIR: scratch/tone_gen_dataset
+  CHECKPOINT: '{{.DATASET_DIR}}/checkpoint.pt'
+  N_SAMPLES: '10000'
+  SEED: '0'
+  EPOCHS: '50'
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+    silent: true
+
+  install:
+    desc: Install the project + dev dependencies (signalflow, torch, …) via uv
+    cmds:
+      - uv sync --dev
+
+  generate:
+    desc: 'Render a synthetic, fully-labeled dataset → DATASET_DIR (vars: N_SAMPLES, SEED, DATASET_DIR)'
+    cmds:
+      - uv run python scripts/generate_subtractive_dataset.py --n-samples {{.N_SAMPLES}} --seed {{.SEED}} --out-dir {{.DATASET_DIR}}
+
+  train:
+    desc: 'Train the CNN on a generated dataset → CHECKPOINT (vars: DATASET_DIR, CHECKPOINT, EPOCHS, SEED)'
+    cmds:
+      - uv run python scripts/train_tone_generation.py --dataset-dir {{.DATASET_DIR}} --checkpoint-out {{.CHECKPOINT}} --epochs {{.EPOCHS}} --seed {{.SEED}}
+
+  eval:
+    desc: 'Evaluate a checkpoint — per-param metrics + round-trip mel cosine + schema validation'
+    cmds:
+      - uv run python scripts/eval_tone_generation.py --checkpoint {{.CHECKPOINT}} --dataset-dir {{.DATASET_DIR}}
+
+  pipeline:
+    desc: Run the full loop end-to-end — generate → train → eval
+    cmds:
+      - task: generate
+      - task: train
+      - task: eval
+
+  test:
+    desc: Run the fast unit tests (skips the slow generate→train→eval smoke)
+    cmds:
+      - uv run pytest -m "not slow" -v
+
+  test:all:
+    desc: Run the full test suite, including the slow end-to-end smoke tests
+    cmds:
+      - uv run pytest -v
+
+  typecheck:
+    desc: Type-check the package with mypy
+    cmds:
+      - uv run mypy src/
+
+  check:
+    desc: Type-check + fast tests (mirrors CI)
+    cmds:
+      - task: typecheck
+      - task: test
+
+  clean:
+    desc: Remove generated training artifacts (dataset, checkpoint, eval report) under DATASET_DIR
+    cmds:
+      - rm -rf {{.DATASET_DIR}}
